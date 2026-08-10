@@ -28,7 +28,7 @@ export default function Header({ view, onGoDash, onGoAppts, user, onLogout }) {
               PatientPad
             </span>
             <span style={{ fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', color: '#7fd4c9', fontWeight: 600 }}>
-              Surmayee Dental Studio
+              Nishant Dental Clinic
             </span>
           </span>
         </div>

@@ -1,6 +1,6 @@
 # Clinic Console
 
-Staff-facing internal tool for Surmayee Dental Studio: reception intake,
+Staff-facing internal tool for Nishant Dental Clinic: reception intake,
 doctor clinical records, and a dashboard with date-range stats and pending
 balances. Ported from the `Clinic Console.dc.html` design prototype in
 `../project/`.
