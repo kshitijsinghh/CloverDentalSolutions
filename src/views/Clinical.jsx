@@ -55,6 +55,7 @@ export default function Clinical({
           { k: 'Payment mode', v: dash(c.paymentMode) }, { k: 'Payment status', v: dash(c.paymentStatus) },
           { k: 'Treatment stage', v: dash(c.treatmentStage) }, { k: 'Google review taken', v: dash(c.googleReviewTaken) },
           { k: 'Next appointment', v: c.nextAppointment ? fmtDate(c.nextAppointment) : '—' },
+          { k: 'Next appointment time', v: c.nextAppointmentTime || '—' },
           { k: 'Comments', v: dash(c.comments) },
         ],
       };
@@ -317,16 +318,22 @@ export default function Clinical({
             </div>
           )}
           {cform.treatmentStage === 'In Progress' && (
-            <div>
-              <label style={labelStyle}>Next appointment date</label>
-              <input type="date" value={cform.nextAppointment} onChange={(e) => onSetField('nextAppointment', e.target.value)} style={fieldStyle} />
-              {showApptCount && (
-                <p style={{ marginTop: 7, fontSize: 13, color: '#0e756c', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#12a094' }} />
-                  {apptCountText}
-                </p>
-              )}
-            </div>
+            <>
+              <div>
+                <label style={labelStyle}>Next appointment date</label>
+                <input type="date" value={cform.nextAppointment} onChange={(e) => onSetField('nextAppointment', e.target.value)} style={fieldStyle} />
+                {showApptCount && (
+                  <p style={{ marginTop: 7, fontSize: 13, color: '#0e756c', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#12a094' }} />
+                    {apptCountText}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label style={labelStyle}>Next appointment time</label>
+                <input type="time" value={cform.nextAppointmentTime} onChange={(e) => onSetField('nextAppointmentTime', e.target.value)} style={fieldStyle} />
+              </div>
+            </>
           )}
           <div style={{ gridColumn: '1 / -1' }}>
             <label style={labelStyle}>Comments</label>

@@ -36,7 +36,7 @@ var VISITS_HEADERS = [
   'problem', 'chiefComplaint', 'treatmentGroup', 'treatment', 'treatmentOther',
   'treatingDoctor', 'treatmentCost', 'amountPaid', 'balanceDue',
   'paymentMode', 'paymentStatus', 'treatmentStage', 'googleReviewTaken',
-  'nextAppointment', 'comments',
+  'nextAppointment', 'nextAppointmentTime', 'comments',
 ];
 
 function doGet(e) {
@@ -187,6 +187,7 @@ function readSnapshot_() {
         treatmentStage: v.treatmentStage || '',
         googleReviewTaken: v.googleReviewTaken || '',
         nextAppointment: v.nextAppointment instanceof Date ? formatDate_(v.nextAppointment) : String(v.nextAppointment || ''),
+        nextAppointmentTime: v.nextAppointmentTime || '',
         comments: v.comments || '',
       },
     });
@@ -333,6 +334,7 @@ function action_saveClinical_(body) {
       treatmentStage: cform.treatmentStage || '',
       googleReviewTaken: cform.googleReviewTaken || '',
       nextAppointment: cform.nextAppointment || '',
+      nextAppointmentTime: cform.nextAppointmentTime || '',
       comments: cform.comments || '',
       done: true,
     };

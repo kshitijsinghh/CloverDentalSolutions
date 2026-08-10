@@ -30,11 +30,18 @@ function num(x) {
 function inr(n) {
   return '₹' + Math.round(n).toLocaleString('en-IN');
 }
+function fmtTime(t) {
+  if (!t) return '—';
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hr = h % 12 || 12;
+  return hr + ':' + String(m).padStart(2, '0') + ' ' + ampm;
+}
 function blankClinical() {
   return {
     problem: '', chiefComplaint: '', treatmentGroup: '', treatment: '', treatmentOther: '',
     treatingDoctor: '', treatmentCost: '', amountPaid: '', balanceDue: '', paymentMode: '',
-    treatmentStage: '', googleReviewTaken: '', nextAppointment: '', comments: '',
+    treatmentStage: '', googleReviewTaken: '', nextAppointment: '', nextAppointmentTime: '', comments: '',
   };
 }
 function findByMobile(db, mobile) {
@@ -57,6 +64,7 @@ export default function App({ user, onLogout }) {
   const [dateFrom, setDateFrom] = useState(firstOfMonth());
   const [dateTo, setDateTo] = useState(today());
   const [payFilter, setPayFilter] = useState('All');
+  const [apptDate, setApptDate] = useState(today());
 
   const [form, setForm] = useState({ mobile: '', name: '', age: '', gender: '', date: today() });
   const [lookupState, setLookupState] = useState('');
@@ -266,17 +274,17 @@ export default function App({ user, onLogout }) {
     { label: 'Pending amount', value: inr(pendingAmount), color: '#ef5a3c' },
   ];
 
-  // Appointments: future follow-ups
-  const todayStr = today();
+  // Appointments: filter by selected date
   const appts = [];
   for (const pid of db.order) {
     const p = db.patients[pid];
     for (const v of p.visits) {
       const na = v.clinical && v.clinical.nextAppointment;
-      if (na && na >= todayStr) {
+      if (na && na === apptDate) {
         const trr = v.clinical ? (/Other/.test(v.clinical.treatment) && v.clinical.treatmentOther ? v.clinical.treatmentOther : v.clinical.treatment) : '';
+        const nat = (v.clinical && v.clinical.nextAppointmentTime) || '';
         appts.push({
-          date: na, dateLabel: fmtDate(na), name: p.name, mobile: p.mobile,
+          date: na, time: nat, timeLabel: fmtTime(nat), name: p.name, mobile: p.mobile,
           patientId: pid, visitId: v.visitId, treatmentLabel: trr || '—',
           stage: (v.clinical.treatmentStage || '—'),
           open: () => openVisit(pid, v.visitId),
@@ -284,7 +292,8 @@ export default function App({ user, onLogout }) {
       }
     }
   }
-  appts.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  appts.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+  const apptDateLabel = fmtDate(apptDate);
 
   const existing = findByMobile(db, form.mobile);
   const previewPatientId = existing ? existing.patientId : 'P' + String(db.seq + 1).padStart(4, '0');
@@ -361,6 +370,8 @@ export default function App({ user, onLogout }) {
         {view === 'appointments' && (
           <Appointments
             appts={appts} hasAppts={appts.length > 0} noAppts={appts.length === 0}
+            apptDate={apptDate} onSetApptDate={setApptDate}
+            onApptToday={() => setApptDate(today())} apptDateLabel={apptDateLabel}
           />
         )}
 
@@ -394,23 +405,24 @@ export default function App({ user, onLogout }) {
         )}
       </main>
 
-      {/* Floating Action Button */}
-      <button
-        onClick={goIntake}
-        title="New visit"
-        aria-label="New visit"
-        style={{
-          position: 'fixed', right: 22, bottom: 22, zIndex: 70, height: 58, padding: '0 24px',
-          border: 0, borderRadius: 100, background: '#ef5a3c', color: '#fff', fontWeight: 700,
-          fontSize: 15.5, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 9,
-          boxShadow: '0 14px 30px -8px rgba(239,90,60,.55)',
-        }}
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round">
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-        New Visit
-      </button>
+      {(view === 'dashboard' || view === 'appointments') && (
+        <button
+          onClick={goIntake}
+          title="New visit"
+          aria-label="New visit"
+          style={{
+            position: 'fixed', right: 22, bottom: 22, zIndex: 70, height: 58, padding: '0 24px',
+            border: 0, borderRadius: 100, background: '#ef5a3c', color: '#fff', fontWeight: 700,
+            fontSize: 15.5, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 9,
+            boxShadow: '0 14px 30px -8px rgba(239,90,60,.55)',
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          New Visit
+        </button>
+      )}
     </div>
   );
 }
