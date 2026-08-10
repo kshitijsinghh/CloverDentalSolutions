@@ -46,7 +46,7 @@ function findByMobile(db, mobile) {
   return null;
 }
 
-export default function App() {
+export default function App({ user, onLogout }) {
   const [view, setView] = useState('dashboard');
   const [db, setDbState] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -341,7 +341,7 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh' }}>
-      <Header view={view} onGoDash={goDash} onGoAppts={goAppts} />
+      <Header view={view} onGoDash={goDash} onGoAppts={goAppts} user={user} onLogout={onLogout} />
       <main style={{ maxWidth: 1180, margin: '0 auto', padding: '26px 22px 60px' }}>
         {loadError && (
           <p style={{ color: '#c0392b', fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{loadError}</p>

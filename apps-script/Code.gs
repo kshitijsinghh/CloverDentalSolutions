@@ -98,7 +98,7 @@ function ensureAllSheets_() {
 function headerIndex_(sh) {
   var headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
   var idx = {};
-  for (var i = 0; i < headers.length; i++) idx[headers[i]] = i;
+  for (var i = 0; i < headers.length; i++) idx[String(headers[i]).trim()] = i;
   return idx;
 }
 

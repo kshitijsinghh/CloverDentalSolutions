@@ -1,6 +1,6 @@
 import { TOUCH_BTN } from '../styles';
 
-export default function Header({ view, onGoDash, onGoAppts }) {
+export default function Header({ view, onGoDash, onGoAppts, user, onLogout }) {
   return (
     <header style={{ background: '#0e3b39', color: '#fff', position: 'sticky', top: 0, zIndex: 40 }}>
       <div
@@ -32,28 +32,59 @@ export default function Header({ view, onGoDash, onGoAppts }) {
             </span>
           </span>
         </div>
-        <nav style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <button
-            onClick={onGoDash}
-            style={{
-              ...TOUCH_BTN, padding: '10px 16px', borderRadius: 10, border: 0, cursor: 'pointer',
-              fontWeight: 700, fontSize: 14.5, background: view === 'dashboard' ? '#12a094' : 'rgba(255,255,255,.12)',
-              color: '#fff',
-            }}
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={onGoAppts}
-            style={{
-              ...TOUCH_BTN, padding: '10px 16px', borderRadius: 10, border: 0, cursor: 'pointer',
-              fontWeight: 700, fontSize: 14.5, background: view === 'appointments' ? '#12a094' : 'rgba(255,255,255,.12)',
-              color: '#fff',
-            }}
-          >
-            Appointments
-          </button>
-        </nav>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <nav style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button
+              onClick={onGoDash}
+              style={{
+                ...TOUCH_BTN, padding: '10px 16px', borderRadius: 10, border: 0, cursor: 'pointer',
+                fontWeight: 700, fontSize: 14.5, background: view === 'dashboard' ? '#12a094' : 'rgba(255,255,255,.12)',
+                color: '#fff',
+              }}
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={onGoAppts}
+              style={{
+                ...TOUCH_BTN, padding: '10px 16px', borderRadius: 10, border: 0, cursor: 'pointer',
+                fontWeight: 700, fontSize: 14.5, background: view === 'appointments' ? '#12a094' : 'rgba(255,255,255,.12)',
+                color: '#fff',
+              }}
+            >
+              Appointments
+            </button>
+          </nav>
+          {user && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 8 }}>
+              {user.picture ? (
+                <img
+                  src={user.picture} alt="" referrerPolicy="no-referrer"
+                  style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid rgba(255,255,255,.25)' }}
+                />
+              ) : (
+                <span style={{
+                  width: 32, height: 32, borderRadius: '50%', background: '#12a094',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 14, fontWeight: 700, color: '#fff',
+                }}>
+                  {(user.name || user.email || '?')[0].toUpperCase()}
+                </span>
+              )}
+              <button
+                onClick={onLogout}
+                title="Sign out"
+                style={{
+                  ...TOUCH_BTN, padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,.2)',
+                  background: 'transparent', color: 'rgba(255,255,255,.7)', fontSize: 12.5,
+                  fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                Sign out
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
