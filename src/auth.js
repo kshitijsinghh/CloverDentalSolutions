@@ -1,6 +1,8 @@
 const ALLOWED_EMAILS = [
   'kshitijsinghh99@gmail.com',
   'teamdocmind@gmail.com',
+  'surmayeedental@gmail.com',
+  'docnishant29@gmail.com',
 ];
 
 const SESSION_KEY = 'clinic_auth';

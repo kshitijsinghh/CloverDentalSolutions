@@ -1,54 +1,49 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { getClientId, isAllowed, storeUser } from '../auth';
 
 export default function Login({ onAuth }) {
-  const btnRef = useRef(null);
-  const errorRef = useRef(null);
+  const [error, setError] = useState('');
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash || !hash.includes('access_token')) return;
+    setChecking(true);
+    const params = new URLSearchParams(hash.substring(1));
+    const accessToken = params.get('access_token');
+    window.history.replaceState(null, '', window.location.pathname);
+    if (!accessToken) { setChecking(false); return; }
+
+    fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: 'Bearer ' + accessToken },
+    })
+      .then((r) => r.json())
+      .then((info) => {
+        const email = (info.email || '').toLowerCase();
+        if (!isAllowed(email)) {
+          setError('Access denied — ' + email + ' is not authorised.');
+          setChecking(false);
+          return;
+        }
+        const user = { email, name: info.name || email, picture: info.picture || '' };
+        storeUser(user);
+        onAuth(user);
+      })
+      .catch(() => { setError('Sign-in failed. Please try again.'); setChecking(false); });
+  }, [onAuth]);
+
+  function handleSignIn() {
     const clientId = getClientId();
-    if (!clientId) return;
-
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.onload = () => {
-      window.google.accounts.id.initialize({
+    if (!clientId) { setError('Google Client ID not configured.'); return; }
+    const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' +
+      new URLSearchParams({
         client_id: clientId,
-        callback: handleCredentialResponse,
-      });
-      window.google.accounts.id.renderButton(btnRef.current, {
-        theme: 'outline',
-        size: 'large',
-        shape: 'pill',
-        text: 'signin_with',
-        width: 280,
-      });
-    };
-    document.head.appendChild(script);
-    return () => { document.head.removeChild(script); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function decodeJwt(token) {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(atob(base64));
-  }
-
-  function handleCredentialResponse(response) {
-    try {
-      const payload = decodeJwt(response.credential);
-      const email = (payload.email || '').toLowerCase();
-      if (!isAllowed(email)) {
-        if (errorRef.current) errorRef.current.textContent = 'Access denied — ' + email + ' is not authorised.';
-        return;
-      }
-      const user = { email, name: payload.name || email, picture: payload.picture || '' };
-      storeUser(user);
-      onAuth(user);
-    } catch {
-      if (errorRef.current) errorRef.current.textContent = 'Sign-in failed. Please try again.';
-    }
+        redirect_uri: window.location.origin,
+        response_type: 'token',
+        scope: 'email profile',
+        prompt: 'select_account',
+      }).toString();
+    window.location.href = authUrl;
   }
 
   return (
@@ -83,8 +78,33 @@ export default function Login({ onAuth }) {
         }}>
           Surmayee Dental Studio
         </p>
-        <div ref={btnRef} style={{ display: 'flex', justifyContent: 'center', minHeight: 44 }} />
-        <p ref={errorRef} style={{ color: '#c0392b', fontSize: 13, fontWeight: 600, marginTop: 16, minHeight: 20 }} />
+
+        {checking ? (
+          <p style={{ color: '#5c7a76', fontSize: 14 }}>Signing in…</p>
+        ) : (
+          <button
+            onClick={handleSignIn}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 10, padding: '12px 28px',
+              border: '1px solid #dadce0', borderRadius: 100, background: '#fff',
+              fontSize: 15, fontWeight: 500, color: '#3c4043', cursor: 'pointer',
+              fontFamily: "'Hanken Grotesk', system-ui, sans-serif",
+              boxShadow: '0 1px 3px rgba(0,0,0,.08)',
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#34A853" d="M10.53 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.99 23.99 0 0 0 0 24c0 3.77.9 7.35 2.56 10.52l7.97-5.93z"/>
+              <path fill="#FBBC05" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.93C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            Sign in with Google
+          </button>
+        )}
+
+        {error && (
+          <p style={{ color: '#c0392b', fontSize: 13, fontWeight: 600, marginTop: 16 }}>{error}</p>
+        )}
       </div>
     </div>
   );
