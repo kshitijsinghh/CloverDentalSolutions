@@ -61,7 +61,7 @@ export default function App({ user, onLogout }) {
   const [loadError, setLoadError] = useState('');
 
   const [q, setQ] = useState('');
-  const [dateFrom, setDateFrom] = useState(firstOfMonth());
+  const [dateFrom, setDateFrom] = useState(today());
   const [dateTo, setDateTo] = useState(today());
   const [payFilter, setPayFilter] = useState('All');
   const [apptDate, setApptDate] = useState(today());
@@ -267,11 +267,12 @@ export default function App({ user, onLogout }) {
     if (bal > 0) pendingPatients++;
     pendingAmount += bal;
   });
+  const pendingVisits = rangeRows.filter((r) => !r.done).length;
   const stats = [
-    { label: 'Patients (range)', value: rangePatientIds.length, color: '#0e756c' },
-    { label: 'Visits (range)', value: rangeRows.length, color: '#0e756c' },
-    { label: 'Pending patients', value: pendingPatients, color: '#12a094' },
-    { label: 'Pending amount', value: inr(pendingAmount), color: '#ef5a3c' },
+    { label: 'Patients', value: rangePatientIds.length, color: '#0e756c', desktopOnly: true },
+    { label: 'Visits', value: rangeRows.length, color: '#0e756c', desktopOnly: true },
+    { label: 'Pending visits', value: pendingVisits, color: '#ef5a3c' },
+    { label: 'Pending amount', value: inr(pendingAmount), color: '#ef5a3c', desktopOnly: true },
   ];
 
   // Appointments: filter by selected date

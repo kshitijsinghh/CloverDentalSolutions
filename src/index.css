@@ -57,4 +57,7 @@ input:focus, select:focus, textarea:focus {
   .card-view {
     display: block;
   }
+  .stat-desktop-only {
+    display: none;
+  }
 }
