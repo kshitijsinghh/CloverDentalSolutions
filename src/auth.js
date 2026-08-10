@@ -1,9 +1,7 @@
-const ALLOWED_EMAILS = [
-  'kshitijsinghh99@gmail.com',
-  'teamdocmind@gmail.com',
-  'surmayeedental@gmail.com',
-  'docnishant29@gmail.com',
-];
+const ALLOWED_EMAILS = (import.meta.env.VITE_ALLOWED_EMAILS || '')
+  .split(',')
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
 
 const SESSION_KEY = 'clinic_auth';
 
