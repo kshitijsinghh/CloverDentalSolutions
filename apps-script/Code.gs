@@ -306,16 +306,21 @@ function action_saveClinical_(body) {
     var vData = sheetRows_(visitsSh);
 
     var num = function (x) { var n = parseFloat(x); return isNaN(n) ? 0 : n; };
-    var prevPending = 0;
     var targetRow = -1;
+    var otherVisits = [];
     for (var i = 0; i < vData.rows.length; i++) {
       var row = vData.rows[i];
       if (row[vData.idx.patientId] !== patientId) continue;
       if (row[vData.idx.visitId] === visitId) { targetRow = i; continue; }
-      prevPending += num(row[vData.idx.treatmentCost]) - num(row[vData.idx.amountPaid]);
+      otherVisits.push({ visitNo: num(row[vData.idx.visitNo]), cost: num(row[vData.idx.treatmentCost]), paid: num(row[vData.idx.amountPaid]) });
     }
-    if (prevPending < 0) prevPending = 0;
     if (targetRow === -1) return { ok: false, error: 'Visit not found: ' + visitId };
+    otherVisits.sort(function (a, b) { return a.visitNo - b.visitNo; });
+    var prevPending = 0;
+    otherVisits.forEach(function (v) {
+      prevPending += v.cost - v.paid;
+      if (prevPending < 0) prevPending = 0;
+    });
 
     var amountToCollect = num(cform.treatmentCost) + prevPending;
     var remaining = amountToCollect - num(cform.amountPaid);
