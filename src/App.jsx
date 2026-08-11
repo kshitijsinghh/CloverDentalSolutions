@@ -118,14 +118,15 @@ export default function App({ user, onLogout }) {
     setIntakeError('');
   }
 
-  function onLookup() {
-    const p = findByMobile(db, form.mobile);
+  function onLookup(mobile) {
+    const m = mobile || form.mobile;
+    const p = findByMobile(db, m);
     if (p) {
       setLookupState('existing');
       setExistingPatientId(p.patientId);
       setIntakeError('');
       setForm((f) => ({ ...f, name: p.name, age: p.age, gender: p.gender }));
-    } else if (normMobile(form.mobile)) {
+    } else if (normMobile(m)) {
       setLookupState('new');
       setExistingPatientId('');
       setIntakeError('');
@@ -135,6 +136,7 @@ export default function App({ user, onLogout }) {
   async function onSaveIntake() {
     const mm = normMobile(form.mobile);
     if (!mm) return setIntakeError('Please enter a mobile number.');
+    if (mm.length !== 10) return setIntakeError('Mobile number must be exactly 10 digits.');
     if (!form.name.trim() || !String(form.age).trim() || !form.gender || !form.date) {
       return setIntakeError('Name, age, gender and date are required.');
     }
