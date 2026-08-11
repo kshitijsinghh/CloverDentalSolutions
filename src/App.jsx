@@ -262,10 +262,13 @@ export default function App({ user, onLogout }) {
   let pendingAmount = 0;
   let pendingPatients = 0;
   rangePatientIds.forEach((pid) => {
-    let bal = 0;
-    db.patients[pid].visits.forEach((v) => { bal += num(v.clinical && v.clinical.balanceDue); });
-    if (bal > 0) pendingPatients++;
-    pendingAmount += bal;
+    let totalCost = 0, totalPaid = 0;
+    db.patients[pid].visits.forEach((v) => {
+      totalCost += num(v.clinical && v.clinical.treatmentCost);
+      totalPaid += num(v.clinical && v.clinical.amountPaid);
+    });
+    const bal = totalCost - totalPaid;
+    if (bal > 0) { pendingPatients++; pendingAmount += bal; }
   });
   const pendingVisits = rangeRows.filter((r) => !r.done).length;
   const stats = [
@@ -313,14 +316,16 @@ export default function App({ user, onLogout }) {
   let pendingTotal = 0;
   if (curP) {
     curP.visits.slice().sort((a, b) => (a.no || 0) - (b.no || 0)).forEach((v) => {
-      const bal = num(v.clinical && v.clinical.balanceDue);
       const cost = num(v.clinical && v.clinical.treatmentCost);
+      const paid = num(v.clinical && v.clinical.amountPaid);
+      const visitOwes = cost - paid;
       const trr = v.clinical ? (/Other/.test(v.clinical.treatment) && v.clinical.treatmentOther ? v.clinical.treatmentOther : v.clinical.treatment) : '';
       const isCur = v.visitId === curVisitId;
-      if (bal > 0) {
-        pendingTotal += bal;
-        pendingList.push({ visitId: v.visitId, dateLabel: fmtDate(v.date), amount: inr(bal), current: isCur });
+      if (visitOwes > 0) {
+        pendingTotal += visitOwes;
+        pendingList.push({ visitId: v.visitId, dateLabel: fmtDate(v.date), amount: inr(visitOwes), current: isCur });
       }
+      const bal = num(v.clinical && v.clinical.balanceDue);
       history.push({
         visitId: v.visitId, dateLabel: fmtDate(v.date), treatmentLabel: trr || '—',
         cost: cost ? inr(cost) : '—', balance: bal ? inr(bal) : '—',
@@ -330,7 +335,10 @@ export default function App({ user, onLogout }) {
   }
   cur.history = history;
   let prevPending = 0;
-  if (curP) curP.visits.forEach((v) => { if (v.visitId !== curVisitId) prevPending += num(v.clinical && v.clinical.balanceDue); });
+  if (curP) curP.visits.forEach((v) => {
+    if (v.visitId !== curVisitId) prevPending += num(v.clinical && v.clinical.treatmentCost) - num(v.clinical && v.clinical.amountPaid);
+  });
+  if (prevPending < 0) prevPending = 0;
   const computedBalance = num(cform.treatmentCost) + prevPending - num(cform.amountPaid);
 
   // Appointment count for the selected next date in clinical form

@@ -312,8 +312,9 @@ function action_saveClinical_(body) {
       var row = vData.rows[i];
       if (row[vData.idx.patientId] !== patientId) continue;
       if (row[vData.idx.visitId] === visitId) { targetRow = i; continue; }
-      prevPending += num(row[vData.idx.balanceDue]);
+      prevPending += num(row[vData.idx.treatmentCost]) - num(row[vData.idx.amountPaid]);
     }
+    if (prevPending < 0) prevPending = 0;
     if (targetRow === -1) return { ok: false, error: 'Visit not found: ' + visitId };
 
     var balanceDue = num(cform.treatmentCost) + prevPending - num(cform.amountPaid);
