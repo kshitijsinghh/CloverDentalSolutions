@@ -315,13 +315,17 @@ export default function App({ user, onLogout }) {
   const pendingList = [];
   let pendingTotal = 0;
   if (curP) {
+    let netTotal = 0;
+    curP.visits.forEach((v) => {
+      netTotal += num(v.clinical && v.clinical.treatmentCost) - num(v.clinical && v.clinical.amountPaid);
+    });
     curP.visits.slice().sort((a, b) => (a.no || 0) - (b.no || 0)).forEach((v) => {
       const cost = num(v.clinical && v.clinical.treatmentCost);
       const paid = num(v.clinical && v.clinical.amountPaid);
       const visitOwes = cost - paid;
       const trr = v.clinical ? (/Other/.test(v.clinical.treatment) && v.clinical.treatmentOther ? v.clinical.treatmentOther : v.clinical.treatment) : '';
       const isCur = v.visitId === curVisitId;
-      if (visitOwes > 0) {
+      if (netTotal > 0 && visitOwes > 0) {
         pendingTotal += visitOwes;
         pendingList.push({ visitId: v.visitId, dateLabel: fmtDate(v.date), amount: inr(visitOwes), current: isCur });
       }
@@ -332,6 +336,7 @@ export default function App({ user, onLogout }) {
         status: (v.clinical && v.clinical.paymentStatus) || '—', current: isCur, rowBg: isCur ? '#eef7f6' : '#fff',
       });
     });
+    if (netTotal <= 0) pendingTotal = 0;
   }
   cur.history = history;
   let prevPending = 0;
