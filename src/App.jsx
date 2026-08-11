@@ -261,7 +261,7 @@ export default function App({ user, onLogout }) {
   const rangePatientIds = Array.from(new Set(rangeRows.map((r) => r.pid)));
   let pendingAmount = 0;
   let pendingPatients = 0;
-  rangePatientIds.forEach((pid) => {
+  db.order.forEach((pid) => {
     let totalCost = 0, totalPaid = 0;
     db.patients[pid].visits.forEach((v) => {
       totalCost += num(v.clinical && v.clinical.treatmentCost);
