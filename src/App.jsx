@@ -398,7 +398,10 @@ export default function App({ user, onLogout }) {
             cur={cur} hasHistory={history.length > 0}
             cform={cform} onSetField={(k, v) => setCform((f) => ({ ...f, [k]: v }))}
             showTreatmentOther={/Other/.test(cform.treatment)}
-            prevPendingLabel={inr(prevPending)} computedBalance={computedBalance}
+            prevPending={prevPending} prevPendingLabel={inr(prevPending)}
+            amountToCollect={num(cform.treatmentCost) + prevPending}
+            amountToCollectLabel={inr(num(cform.treatmentCost) + prevPending)}
+            computedBalance={computedBalance}
             computedBalanceLabel={inr(computedBalance)}
             balanceColor={computedBalance > 0 ? '#c0392b' : '#12805a'}
             hasPending={pendingList.length > 0} noPending={pendingList.length === 0}

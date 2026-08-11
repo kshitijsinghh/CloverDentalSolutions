@@ -317,8 +317,10 @@ function action_saveClinical_(body) {
     if (prevPending < 0) prevPending = 0;
     if (targetRow === -1) return { ok: false, error: 'Visit not found: ' + visitId };
 
-    var balanceDue = num(cform.treatmentCost) + prevPending - num(cform.amountPaid);
-    var paymentStatus = balanceDue <= 0 ? 'Fully Paid' : (num(cform.amountPaid) > 0 ? 'Partially paid' : 'Not paid');
+    var amountToCollect = num(cform.treatmentCost) + prevPending;
+    var remaining = amountToCollect - num(cform.amountPaid);
+    var balanceDue = remaining;
+    var paymentStatus = remaining <= 0 ? 'Fully Paid' : (num(cform.amountPaid) > 0 ? 'Partially paid' : 'Not paid');
     var r = targetRow + 2;
     var fields = {
       problem: cform.problem || '',
