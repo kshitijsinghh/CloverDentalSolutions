@@ -102,16 +102,33 @@ export default function App({ user, onLogout }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    window.history.replaceState({ view: 'dashboard' }, '');
+    const onPop = (e) => setView(e.state?.view || 'dashboard');
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  function pushView(v) {
+    window.history.pushState({ view: v }, '');
+    setView(v);
+  }
+  function replaceView(v) {
+    window.history.replaceState({ view: v }, '');
+    setView(v);
+  }
+  function goBack() {
+    window.history.back();
+  }
+
   function goDash() {
-    setView('dashboard');
-    loadList(true);
+    pushView('dashboard');
   }
   function goAppts() {
-    setView('appointments');
-    loadList(true);
+    pushView('appointments');
   }
   function goIntake() {
-    setView('intake');
+    pushView('intake');
     setForm({ mobile: '', name: '', age: '', gender: '', date: today() });
     setLookupState('');
     setExistingPatientId('');
@@ -153,7 +170,7 @@ export default function App({ user, onLogout }) {
       setForm({ mobile: '', name: '', age: '', gender: '', date: today() });
       setLookupState('');
       setExistingPatientId('');
-      setView('clinical');
+      replaceView('clinical');
     } catch (e) {
       setIntakeError(e.message);
     } finally {
@@ -169,7 +186,7 @@ export default function App({ user, onLogout }) {
     setCform(v && v.clinical ? { ...blankClinical(), ...v.clinical } : blankClinical());
     setSavedFlash(false);
     setClinicalError('');
-    setView('clinical');
+    pushView('clinical');
   }
 
   async function onSaveClinical() {
@@ -181,8 +198,7 @@ export default function App({ user, onLogout }) {
       setSavedFlash(true);
       setTimeout(() => {
         setSavedFlash(false);
-        setView('dashboard');
-        loadList(true);
+        replaceView('dashboard');
       }, 900);
     } catch (e) {
       setClinicalError(e.message);
@@ -209,7 +225,7 @@ export default function App({ user, onLogout }) {
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5c7a76', fontSize: 15 }}>
-        Loading clinic records…
+        Loading, please wait...
       </div>
     );
   }
@@ -401,7 +417,7 @@ export default function App({ user, onLogout }) {
             form={form} onSetField={(k, v) => setForm((f) => ({ ...f, [k]: v }))}
             onLookup={onLookup} lookupState={lookupState} existingPatientId={existingPatientId} nextVisitNo={nextVisitNo}
             previewPatientId={previewPatientId} previewVisitId={previewVisitId}
-            intakeError={intakeError} onGoDash={goDash} onSaveIntake={onSaveIntake} saving={savingIntake}
+            intakeError={intakeError} onGoBack={goBack} onSaveIntake={onSaveIntake} saving={savingIntake}
           />
         )}
 
@@ -421,7 +437,7 @@ export default function App({ user, onLogout }) {
             hasQr={!!db.upiQr} noQr={!db.upiQr} qrUrl={db.upiQr}
             qrUploadLabel={db.upiQr ? 'Replace scanner' : 'Upload scanner'} onUploadQr={onUploadQr}
             showQr={showQr} onOpenQr={() => setShowQr(true)} onCloseQr={() => setShowQr(false)}
-            savedFlash={savedFlash} onGoDash={goDash} onSaveClinical={onSaveClinical} saving={savingClinical}
+            savedFlash={savedFlash} onGoBack={goBack} onSaveClinical={onSaveClinical} saving={savingClinical}
             error={clinicalError}
             apptCountText={apptCountText} showApptCount={!!cform.nextAppointment}
             db={db} curPatientId={curPatientId}
@@ -446,6 +462,24 @@ export default function App({ user, onLogout }) {
           </svg>
           New Visit
         </button>
+      )}
+
+      {(savingIntake || savingClinical) && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 100,
+          background: 'rgba(238,244,243,.88)', backdropFilter: 'blur(2px)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          gap: 16,
+        }}>
+          <div style={{
+            width: 44, height: 44, border: '3.5px solid #d6e7e3',
+            borderTopColor: '#12a094', borderRadius: '50%',
+            animation: 'spin .7s linear infinite',
+          }} />
+          <span style={{ fontSize: 15, color: '#5c7a76', fontWeight: 600 }}>
+            Loading, please wait...
+          </span>
+        </div>
       )}
     </div>
   );
