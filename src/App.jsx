@@ -4,6 +4,8 @@ import Dashboard from './views/Dashboard';
 import Intake from './views/Intake';
 import Clinical from './views/Clinical';
 import Appointments from './views/Appointments';
+import Patients from './views/Patients';
+import PatientDetail from './views/PatientDetail';
 import { fetchList, saveIntake, saveClinical, uploadQr } from './api';
 
 function today() {
@@ -61,9 +63,8 @@ export default function App({ user, onLogout }) {
   const [loadError, setLoadError] = useState('');
 
   const [q, setQ] = useState('');
-  const [dateFrom, setDateFrom] = useState(today());
+  const [dateFrom, setDateFrom] = useState(firstOfMonth());
   const [dateTo, setDateTo] = useState(today());
-  const [payFilter, setPayFilter] = useState('All');
   const [apptDate, setApptDate] = useState(today());
 
   const [form, setForm] = useState({ mobile: '', name: '', age: '', gender: '', date: today() });
@@ -74,6 +75,7 @@ export default function App({ user, onLogout }) {
 
   const [curPatientId, setCurPatientId] = useState('');
   const [curVisitId, setCurVisitId] = useState('');
+  const [detailPid, setDetailPid] = useState('');
   const [cform, setCform] = useState(blankClinical());
   const [savedFlash, setSavedFlash] = useState(false);
   const [savingClinical, setSavingClinical] = useState(false);
@@ -90,8 +92,8 @@ export default function App({ user, onLogout }) {
       const res = await fetchList();
       applySnapshot(res);
       setLoadError('');
-    } catch (e) {
-      setLoadError(e.message);
+    } catch {
+      setLoadError('Something went wrong, please try again');
     } finally {
       if (isRefresh) setRefreshing(false); else setLoading(false);
     }
@@ -104,7 +106,10 @@ export default function App({ user, onLogout }) {
 
   useEffect(() => {
     window.history.replaceState({ view: 'dashboard' }, '');
-    const onPop = (e) => setView(e.state?.view || 'dashboard');
+    const onPop = (e) => {
+      setView(e.state?.view || 'dashboard');
+      setDetailPid(e.state?.detailPid || '');
+    };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
@@ -133,6 +138,14 @@ export default function App({ user, onLogout }) {
     setLookupState('');
     setExistingPatientId('');
     setIntakeError('');
+  }
+  function goPatients() {
+    pushView('patients');
+  }
+  function openPatientDetail(pid) {
+    setDetailPid(pid);
+    window.history.pushState({ view: 'patientDetail', detailPid: pid }, '');
+    setView('patientDetail');
   }
 
   function onLookup(mobile) {
@@ -171,8 +184,8 @@ export default function App({ user, onLogout }) {
       setLookupState('');
       setExistingPatientId('');
       replaceView('clinical');
-    } catch (e) {
-      setIntakeError(e.message);
+    } catch {
+      setIntakeError('Something went wrong, please try again');
     } finally {
       setSavingIntake(false);
     }
@@ -200,8 +213,8 @@ export default function App({ user, onLogout }) {
         setSavedFlash(false);
         replaceView('dashboard');
       }, 900);
-    } catch (e) {
-      setClinicalError(e.message);
+    } catch {
+      setClinicalError('Something went wrong, please try again');
     } finally {
       setSavingClinical(false);
     }
@@ -215,8 +228,8 @@ export default function App({ user, onLogout }) {
       try {
         const res = await uploadQr({ dataUrl: reader.result, filename: file.name });
         applySnapshot(res);
-      } catch (err) {
-        setClinicalError(err.message);
+      } catch {
+        setClinicalError('Something went wrong, please try again');
       }
     };
     reader.readAsDataURL(file);
@@ -224,8 +237,16 @@ export default function App({ user, onLogout }) {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5c7a76', fontSize: 15 }}>
-        Loading, please wait...
+      <div style={{
+        minHeight: '100vh', display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', gap: 16, background: '#eef4f3',
+      }}>
+        <div style={{
+          width: 44, height: 44, border: '3.5px solid #d6e7e3',
+          borderTopColor: '#12a094', borderRadius: '50%',
+          animation: 'spin .7s linear infinite',
+        }} />
+        <span style={{ fontSize: 15, color: '#5c7a76', fontWeight: 600 }}>Loading, please wait...</span>
       </div>
     );
   }
@@ -233,8 +254,7 @@ export default function App({ user, onLogout }) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <div style={{ maxWidth: 480, background: '#fff', border: '1px solid #f6d3c8', borderRadius: 16, padding: 24, textAlign: 'center' }}>
-          <p style={{ color: '#c0392b', fontWeight: 700, fontSize: 16 }}>Couldn't load clinic data</p>
-          <p style={{ color: '#5c7a76', fontSize: 14, marginTop: 8 }}>{loadError}</p>
+          <p style={{ color: '#c0392b', fontWeight: 700, fontSize: 16 }}>Something went wrong, please try again</p>
           <button
             onClick={() => loadList(false)}
             style={{ marginTop: 16, padding: '11px 20px', borderRadius: 10, border: 0, background: '#0e3b39', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
@@ -273,13 +293,12 @@ export default function App({ user, onLogout }) {
   rows.sort((a, b) => b.ts - a.ts);
   const rangeRows = rows.filter((r) => inRange(r.date));
   const qq = q.trim().toLowerCase();
-  let visitRows = qq ? rangeRows.filter((r) => (r.name + ' ' + r.mobile + ' ' + r.visitId + ' ' + r.pid).toLowerCase().includes(qq)) : rangeRows;
-  if (payFilter !== 'All') visitRows = visitRows.filter((r) => (r.payLabel || 'Pending') === payFilter);
+  const visitRows = qq ? rangeRows.filter((r) => (r.name + ' ' + r.mobile + ' ' + r.visitId + ' ' + r.pid).toLowerCase().includes(qq)) : rangeRows;
 
   const rangePatientIds = Array.from(new Set(rangeRows.map((r) => r.pid)));
   let pendingAmount = 0;
   let pendingPatients = 0;
-  db.order.forEach((pid) => {
+  rangePatientIds.forEach((pid) => {
     const sorted = db.patients[pid].visits.slice().sort((a, b) => (a.no || 0) - (b.no || 0));
     let bal = 0;
     sorted.forEach((v) => {
@@ -288,12 +307,11 @@ export default function App({ user, onLogout }) {
     });
     if (bal > 0) { pendingPatients++; pendingAmount += bal; }
   });
-  const pendingVisits = rangeRows.filter((r) => !r.done).length;
   const stats = [
-    { label: 'Patients', value: rangePatientIds.length, color: '#0e756c', desktopOnly: true },
-    { label: 'Visits', value: rangeRows.length, color: '#0e756c', desktopOnly: true },
-    { label: 'Pending visits', value: pendingVisits, color: '#ef5a3c' },
-    { label: 'Pending amount', value: inr(pendingAmount), color: '#ef5a3c', desktopOnly: true },
+    { label: 'Patients', value: rangePatientIds.length, color: '#0e756c' },
+    { label: 'Visits', value: rangeRows.length, color: '#0e756c' },
+    { label: 'Pending patients', value: pendingPatients, color: '#ef5a3c' },
+    { label: 'Pending amount', value: inr(pendingAmount), color: '#ef5a3c' },
   ];
 
   // Appointments: filter by selected date
@@ -316,6 +334,32 @@ export default function App({ user, onLogout }) {
   }
   appts.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
   const apptDateLabel = fmtDate(apptDate);
+
+  const allPatients = db.order.map((pid) => {
+    const p = db.patients[pid];
+    const sorted = p.visits.slice().sort((a, b) => (a.no || 0) - (b.no || 0));
+    let bal = 0;
+    let totalP = 0;
+    sorted.forEach((v) => {
+      bal += num(v.clinical && v.clinical.treatmentCost) - num(v.clinical && v.clinical.amountPaid);
+      totalP += num(v.clinical && v.clinical.amountPaid);
+      if (bal < 0) bal = 0;
+    });
+    const lastVisit = sorted.length > 0 ? sorted[sorted.length - 1] : null;
+    let st;
+    if (bal > 0 && totalP > 0) st = 'Partially paid';
+    else if (bal > 0) st = 'Not paid';
+    else st = 'Fully Paid';
+    return {
+      patientId: pid, name: p.name, age: p.age, gender: p.gender, mobile: p.mobile,
+      ageGender: (p.age || '?') + '/' + (p.gender || '—'),
+      lastDate: lastVisit ? lastVisit.date : '',
+      lastLabel: lastVisit ? fmtDate(lastVisit.date) : '—',
+      visitCount: p.visits.length,
+      outstanding: bal, status: st,
+    };
+  });
+  const outstandingTotal = allPatients.reduce((s, p) => s + p.outstanding, 0);
 
   const existing = findByMobile(db, form.mobile);
   const previewPatientId = existing ? existing.patientId : 'P' + String(db.seq + 1).padStart(4, '0');
@@ -387,7 +431,7 @@ export default function App({ user, onLogout }) {
 
   return (
     <div style={{ minHeight: '100vh' }}>
-      <Header view={view} onGoDash={goDash} onGoAppts={goAppts} user={user} onLogout={onLogout} />
+      <Header view={view} onGoDash={goDash} onGoAppts={goAppts} onGoPatients={goPatients} user={user} onLogout={onLogout} />
       <main style={{ maxWidth: 1180, margin: '0 auto', padding: '26px 22px 60px' }}>
         {loadError && (
           <p style={{ color: '#c0392b', fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{loadError}</p>
@@ -400,7 +444,6 @@ export default function App({ user, onLogout }) {
             onRefresh={() => loadList(true)} refreshing={refreshing}
             stats={stats} q={q} onSetQ={setQ}
             visitRows={visitRows} hasVisits={visitRows.length > 0} noVisits={rows.length === 0}
-            payFilter={payFilter} onSetPayFilter={setPayFilter}
           />
         )}
 
@@ -409,6 +452,20 @@ export default function App({ user, onLogout }) {
             appts={appts} hasAppts={appts.length > 0} noAppts={appts.length === 0}
             apptDate={apptDate} onSetApptDate={setApptDate}
             onApptToday={() => setApptDate(today())} apptDateLabel={apptDateLabel}
+          />
+        )}
+
+        {view === 'patients' && (
+          <Patients
+            allPatients={allPatients} outstandingTotal={outstandingTotal}
+            onOpenPatient={openPatientDetail}
+          />
+        )}
+
+        {view === 'patientDetail' && detailPid && db.patients[detailPid] && (
+          <PatientDetail
+            patient={db.patients[detailPid]} patientId={detailPid}
+            onGoBack={goBack}
           />
         )}
 
@@ -445,7 +502,7 @@ export default function App({ user, onLogout }) {
         )}
       </main>
 
-      {(view === 'dashboard' || view === 'appointments') && (
+      {(view === 'dashboard' || view === 'appointments' || view === 'patients') && (
         <button
           onClick={goIntake}
           title="New visit"
