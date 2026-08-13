@@ -307,11 +307,12 @@ export default function App({ user, onLogout }) {
     });
     if (bal > 0) { pendingPatients++; pendingAmount += bal; }
   });
+  const pendingVisits = rangeRows.filter((r) => !r.done).length;
   const stats = [
-    { label: 'Patients', value: rangePatientIds.length, color: '#0e756c' },
-    { label: 'Visits', value: rangeRows.length, color: '#0e756c' },
-    { label: 'Pending patients', value: pendingPatients, color: '#ef5a3c' },
-    { label: 'Pending amount', value: inr(pendingAmount), color: '#ef5a3c' },
+    { label: 'Patients', value: rangePatientIds.length, color: '#0e756c', desktopOnly: true },
+    { label: 'Visits', value: rangeRows.length, color: '#0e756c', desktopOnly: true },
+    { label: 'Pending visits', value: pendingVisits, color: '#ef5a3c' },
+    { label: 'Pending amount', value: inr(pendingAmount), color: '#ef5a3c', desktopOnly: true },
   ];
 
   // Appointments: filter by selected date
