@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  CHIEF_COMPLAINTS, TREATMENT_GROUPS, TREATMENTS, PAYMENT_MODES, YES_NO, TREATMENT_STAGES,
+  CHIEF_COMPLAINTS, TREATMENT_GROUPS, TREATMENTS, TOOTH_NUMBERS, PAYMENT_MODES, YES_NO, TREATMENT_STAGES,
 } from '../options';
 import { TOUCH_BTN, FLUID_GRID_2COL } from '../styles';
 
@@ -129,7 +129,7 @@ export default function Clinical({
         rows: [
           { k: 'Problem', v: dash(c.problem) }, { k: 'Chief complaint', v: dash(c.chiefComplaint) },
           { k: 'Treatment group', v: dash(c.treatmentGroup) }, { k: 'Treatment', v: dash(trd) },
-          { k: 'Treating doctor', v: dash(c.treatingDoctor) },
+          { k: 'Tooth number', v: dash(c.toothNumber) }, { k: 'Treating doctor', v: dash(c.treatingDoctor) },
           { k: 'Treatment cost', v: c.treatmentCost ? inr(num(c.treatmentCost)) : '—' },
           { k: 'Amount paid', v: c.amountPaid ? inr(num(c.amountPaid)) : '—' },
           { k: 'Balance due', v: c.balanceDue ? inr(num(c.balanceDue)) : '—' },
@@ -282,6 +282,13 @@ export default function Clinical({
             <MultiSelect
               value={cform.treatment} options={TREATMENTS}
               onChange={(v) => onSetField('treatment', v)} placeholder="Select…"
+            />
+          </div>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={labelStyle}>Tooth number</label>
+            <MultiSelect
+              value={cform.toothNumber} options={TOOTH_NUMBERS}
+              onChange={(v) => onSetField('toothNumber', v)} placeholder="Select…"
             />
           </div>
           {showTreatmentOther && (

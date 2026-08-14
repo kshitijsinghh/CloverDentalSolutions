@@ -41,7 +41,7 @@ function fmtTime(t) {
 }
 function blankClinical() {
   return {
-    problem: '', chiefComplaint: '', treatmentGroup: '', treatment: '', treatmentOther: '',
+    problem: '', chiefComplaint: '', treatmentGroup: '', treatment: '', toothNumber: '', treatmentOther: '',
     treatingDoctor: '', treatmentCost: '', amountPaid: '', balanceDue: '', paymentMode: '',
     treatmentStage: '', googleReviewTaken: '', nextAppointment: '', nextAppointmentTime: '', comments: '',
   };

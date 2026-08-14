@@ -26,6 +26,8 @@ export const TREATMENTS = [
   'Crown Removal', 'Re-RCT',
 ];
 
+export const TOOTH_NUMBERS = Array.from({ length: 32 }, (_, i) => String(i + 1));
+
 export const PAYMENT_MODES = ['UPI', 'Debit Card', 'Credit Card'];
 export const YES_NO = ['Yes', 'No'];
 export const TREATMENT_STAGES = ['Complete', 'In Progress'];
