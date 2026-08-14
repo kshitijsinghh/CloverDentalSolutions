@@ -79,7 +79,7 @@ export default function Header({ view, onGoDash, onGoAppts, user, onLogout }) {
               PatientPad
             </span>
             <span style={{ fontSize: 12.5, color: '#7fd4c9', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
-              · Nishant
+              · Clover
             </span>
           </div>
           {avatarBtn(34)}
@@ -142,7 +142,7 @@ export default function Header({ view, onGoDash, onGoAppts, user, onLogout }) {
               display: 'block', fontSize: 9.5, letterSpacing: '.16em', textTransform: 'uppercase',
               color: '#7fd4c9', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
             }}>
-              Nishant Dental Clinic
+              Clover Dental Solutions
             </span>
           </span>
         </div>
