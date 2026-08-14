@@ -6,7 +6,7 @@ import Clinical from './views/Clinical';
 import Appointments from './views/Appointments';
 import Patients from './views/Patients';
 import PatientDetail from './views/PatientDetail';
-import { fetchList, saveIntake, saveClinical, uploadQr } from './api';
+import { fetchList, saveIntake, saveClinical, uploadQr, getCachedList } from './api';
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -100,7 +100,14 @@ export default function App({ user, onLogout }) {
   }
 
   useEffect(() => {
-    loadList(false);
+    const cached = getCachedList();
+    if (cached) {
+      applySnapshot(cached);
+      setLoading(false);
+      loadList(true);
+    } else {
+      loadList(false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -385,7 +392,6 @@ export default function App({ user, onLogout }) {
       runBal += num(v.clinical && v.clinical.treatmentCost) - num(v.clinical && v.clinical.amountPaid);
       if (runBal < 0) { runBal = 0; lastReset = i; }
     });
-    pendingTotal = runBal;
     sorted.forEach((v, i) => {
       const cost = num(v.clinical && v.clinical.treatmentCost);
       const paid = num(v.clinical && v.clinical.amountPaid);
@@ -394,6 +400,7 @@ export default function App({ user, onLogout }) {
       const isCur = v.visitId === curVisitId;
       if (i > lastReset && visitOwes > 0) {
         pendingList.push({ visitId: v.visitId, dateLabel: fmtDate(v.date), amount: inr(visitOwes), current: isCur });
+        pendingTotal += visitOwes;
       }
       const bal = num(v.clinical && v.clinical.balanceDue);
       history.push({
